@@ -14,28 +14,60 @@ if TYPE_CHECKING:
     from .main import RunConfig
 
 
+def _parse_mysql_quoted_list(column_type: str) -> list[str]:
+    values: list[str] = []
+    current: list[str] = []
+    in_quote = False
+    escape = False
+
+    for ch in column_type:
+        if not in_quote:
+            if ch == "'":
+                in_quote = True
+                current = []
+            continue
+
+        if escape:
+            current.append(ch)
+            escape = False
+            continue
+
+        if ch == "\\":
+            escape = True
+            continue
+
+        if ch == "'":
+            values.append("".join(current))
+            in_quote = False
+            continue
+
+        current.append(ch)
+
+    return values
+
+
 def _parse_column_type(column_type: str) -> str:
     """Normalize a MySQL data type name to a canonical type."""
     ct = column_type.upper()
 
     if ct in ("TINYINT", "SMALLINT", "MEDIUMINT", "INT", "BIGINT"):
-        return "INTEGER"
+        return "INT"
     if ct in ("DOUBLE", "FLOAT", "NUMERIC", "DECIMAL"):
-        return "DOUBLE"
+        return "DECIMAL"
     if ct in ("VARCHAR", "CHAR", "TEXT", "TINYTEXT", "MEDIUMTEXT", "LONGTEXT"):
-        return "VARCHAR"
+        return "TEXT"
     if ct in ("DATE", "TIME", "DATETIME", "TIMESTAMP", "YEAR"):
-        return "TIMESTAMP"
+        return "DATETIME"
     if ct == "BIT":
         return "BIT"
     if ct in ("BINARY", "BLOB", "TINYBLOB", "MEDIUMBLOB", "LONGBLOB", "VARBINARY"):
-        return "BINARY"
+        return "BLOB"
     if ct == "ENUM":
         return "ENUM"
     if ct == "SET":
         return "SET"
     if ct == "JSON":
-        return "VARCHAR"
+        return "TEXT"
 
     raise RuntimeError(f"Unhandled data type: {column_type}")
 
@@ -57,28 +89,30 @@ class SchemaMySQL(Schema):
         try:
             self._load_tables(conn, dbname)
             self._load_columns(conn, dbname)
+            self._load_foreign_keys(conn, dbname)
         finally:
             conn.close()
+
+        self.booltype = SQLType.get("BOOL")
+        self.inttype = SQLType.get("INT")
+        self.internaltype = SQLType.get("internal")
+        self.arraytype = SQLType.get("ARRAY")
 
         self._register_operators()
         self._register_functions()
         self._register_aggregates()
 
-        self.booltype = SQLType.get("INTEGER")
-        self.inttype = SQLType.get("INTEGER")
-        self.internaltype = SQLType.get("internal")
-        self.arraytype = SQLType.get("ARRAY")
-
         self.true_literal = "1"
         self.false_literal = "0"
 
         self.types = [
-            SQLType.get("INTEGER"),
-            SQLType.get("DOUBLE"),
-            SQLType.get("VARCHAR"),
-            SQLType.get("TIMESTAMP"),
+            SQLType.get("BOOL"),
+            SQLType.get("INT"),
+            SQLType.get("DECIMAL"),
+            SQLType.get("TEXT"),
+            SQLType.get("DATETIME"),
             SQLType.get("BIT"),
-            SQLType.get("BINARY"),
+            SQLType.get("BLOB"),
             SQLType.get("ENUM"),
             SQLType.get("SET"),
             SQLType.get("internal"),
@@ -110,9 +144,8 @@ class SchemaMySQL(Schema):
         print("Loading columns and constraints...", end="", file=sys.stderr)
         for t in self.tables:
             with conn.cursor() as cur:
-                # For MySQL we currently keep column metadata intentionally lightweight.
                 cur.execute(
-                    "SELECT COLUMN_NAME, UPPER(DATA_TYPE) "
+                    "SELECT COLUMN_NAME, UPPER(DATA_TYPE), IS_NULLABLE, COLUMN_DEFAULT, COLUMN_KEY, COLUMN_TYPE "
                     "FROM information_schema.columns "
                     "WHERE TABLE_SCHEMA = %s AND TABLE_NAME = %s",
                     (t.schema, t.name),
@@ -122,32 +155,74 @@ class SchemaMySQL(Schema):
                         col_type = _parse_column_type(row[1])
                     except RuntimeError:
                         continue
-                    t.columns().append(Column(row[0], SQLType.get(col_type)))
+                    t.columns().append(
+                        Column(
+                            row[0],
+                            SQLType.get(col_type),
+                            not_null=(row[2] == "NO"),
+                            has_default=(row[3] is not None),
+                            is_primary_key=(row[4] == "PRI"),
+                            enum_values=_parse_mysql_quoted_list(row[5]) if col_type == "ENUM" else [],
+                            set_values=_parse_mysql_quoted_list(row[5]) if col_type == "SET" else [],
+                        )
+                    )
         print("done.", file=sys.stderr)
 
+    def _load_foreign_keys(self, conn, dbname: str):
+        table_map = {(t.schema, t.name): t for t in self.tables}
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT TABLE_SCHEMA, TABLE_NAME, COLUMN_NAME, REFERENCED_TABLE_SCHEMA, "
+                "REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME "
+                "FROM information_schema.KEY_COLUMN_USAGE "
+                "WHERE TABLE_SCHEMA = %s AND REFERENCED_TABLE_SCHEMA IS NOT NULL",
+                (dbname,),
+            )
+            for tschema, tname, cname, ref_schema, ref_table, ref_column in cur.fetchall():
+                table = table_map.get((tschema, tname))
+                ref = table_map.get((ref_schema, ref_table))
+                if table is None:
+                    continue
+                column = next((c for c in table.columns() if c.name == cname), None)
+                if column is None:
+                    continue
+                column.is_foreign_key = True
+                column.fk_ref_schema = ref_schema
+                column.fk_ref_table = ref_table
+                column.fk_ref_column = ref_column
+                if ref is not None:
+                    ref.is_referenced_by_fk = True
+
     def _register_operators(self):
-        def binop(name, typename):
+        def same_type_op(name, typename):
             t = SQLType.get(typename)
             self.register_operator(Op(name, t, t, t))
 
-        binop("*", "INTEGER")
-        binop("/", "INTEGER")
-        binop("+", "INTEGER")
-        binop("-", "INTEGER")
-        binop(">>", "INTEGER")
-        binop("<<", "INTEGER")
-        binop("&", "INTEGER")
-        binop("|", "INTEGER")
-        binop("<", "INTEGER")
-        binop("<=", "INTEGER")
-        binop(">", "INTEGER")
-        binop(">=", "INTEGER")
-        binop("=", "INTEGER")
-        binop("<>", "INTEGER")
-        binop("IS", "INTEGER")
-        binop("IS NOT", "INTEGER")
-        binop("AND", "INTEGER")
-        binop("OR", "INTEGER")
+        def predicate_op(name, typename):
+            t = SQLType.get(typename)
+            self.register_operator(Op(name, t, t, self.booltype))
+
+        same_type_op("*", "INT")
+        same_type_op("/", "INT")
+        same_type_op("+", "INT")
+        same_type_op("-", "INT")
+        same_type_op(">>", "INT")
+        same_type_op("<<", "INT")
+        same_type_op("&", "INT")
+        same_type_op("|", "INT")
+
+        same_type_op("+", "DECIMAL")
+        same_type_op("-", "DECIMAL")
+
+        for typename in ("INT", "DECIMAL", "TEXT", "DATETIME"):
+            predicate_op("=", typename)
+            predicate_op("<>", typename)
+
+        for typename in ("INT", "DECIMAL", "DATETIME"):
+            predicate_op("<", typename)
+            predicate_op("<=", typename)
+            predicate_op(">", typename)
+            predicate_op(">=", typename)
 
     def _register_functions(self):
         def func(name, restype):
@@ -171,23 +246,32 @@ class SchemaMySQL(Schema):
             r.argtypes.append(SQLType.get(c))
             self.register_routine(r)
 
-        func("last_insert_rowid", "INTEGER")
-        func1("abs", "INTEGER", "INTEGER")
-        func1("hex", "VARCHAR", "VARCHAR")
-        func1("length", "INTEGER", "VARCHAR")
-        func1("lower", "VARCHAR", "VARCHAR")
-        func1("ltrim", "VARCHAR", "VARCHAR")
-        func1("rtrim", "VARCHAR", "VARCHAR")
-        func1("trim", "VARCHAR", "VARCHAR")
-        func1("quote", "VARCHAR", "VARCHAR")
-        func1("round", "INTEGER", "DOUBLE")
-        func1("rtrim", "VARCHAR", "VARCHAR")
-        func1("trim", "VARCHAR", "VARCHAR")
-        func1("upper", "VARCHAR", "VARCHAR")
-        func2("instr", "INTEGER", "VARCHAR", "VARCHAR")
-        func2("substr", "VARCHAR", "VARCHAR", "INTEGER")
-        func3("substr", "VARCHAR", "VARCHAR", "INTEGER", "INTEGER")
-        func3("replace", "VARCHAR", "VARCHAR", "VARCHAR", "VARCHAR")
+        func("last_insert_id", "INT")
+        func("current_timestamp", "DATETIME")
+        func1("abs", "INT", "INT")
+        func1("round", "INT", "DECIMAL")
+        func1("hex", "TEXT", "TEXT")
+        func1("char_length", "INT", "TEXT")
+        func1("lower", "TEXT", "TEXT")
+        func1("upper", "TEXT", "TEXT")
+        func1("ltrim", "TEXT", "TEXT")
+        func1("rtrim", "TEXT", "TEXT")
+        func1("trim", "TEXT", "TEXT")
+        func1("quote", "TEXT", "TEXT")
+        func1("date", "DATETIME", "DATETIME")
+        func2("concat", "TEXT", "TEXT", "TEXT")
+        func2("locate", "INT", "TEXT", "TEXT")
+        func2("substring", "TEXT", "TEXT", "INT")
+        func2("ifnull", "INT", "INT", "INT")
+        func2("ifnull", "DECIMAL", "DECIMAL", "DECIMAL")
+        func2("ifnull", "TEXT", "TEXT", "TEXT")
+        func2("ifnull", "DATETIME", "DATETIME", "DATETIME")
+        func2("nullif", "INT", "INT", "INT")
+        func2("nullif", "DECIMAL", "DECIMAL", "DECIMAL")
+        func2("nullif", "TEXT", "TEXT", "TEXT")
+        func2("nullif", "DATETIME", "DATETIME", "DATETIME")
+        func3("substring", "TEXT", "TEXT", "INT", "INT")
+        func3("replace", "TEXT", "TEXT", "TEXT", "TEXT")
 
     def _register_aggregates(self):
         def agg(name, restype, argtype):
@@ -195,14 +279,14 @@ class SchemaMySQL(Schema):
             r.argtypes.append(SQLType.get(argtype))
             self.register_aggregate(r)
 
-        agg("avg", "INTEGER", "INTEGER")
-        agg("avg", "DOUBLE", "DOUBLE")
-        agg("count", "INTEGER", "INTEGER")
-        agg("group_concat", "VARCHAR", "VARCHAR")
-        agg("max", "DOUBLE", "DOUBLE")
-        agg("max", "INTEGER", "INTEGER")
-        agg("sum", "DOUBLE", "DOUBLE")
-        agg("sum", "INTEGER", "INTEGER")
+        agg("avg", "INT", "INT")
+        agg("avg", "DECIMAL", "DECIMAL")
+        agg("count", "INT", "INT")
+        agg("group_concat", "TEXT", "TEXT")
+        agg("max", "DECIMAL", "DECIMAL")
+        agg("max", "INT", "INT")
+        agg("sum", "DECIMAL", "DECIMAL")
+        agg("sum", "INT", "INT")
 
     def quote_name(self, identifier: str) -> str:
         return f"`{identifier}`"

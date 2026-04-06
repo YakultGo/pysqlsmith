@@ -15,6 +15,14 @@ from .random_utils import d6, d9, d12, d20, d42, d100, random_pick
 # Table references
 # ---------------------------------------------------------------------------
 
+
+def _mutation_target_table(p: Optional[Prod]):
+    while p is not None:
+        if isinstance(p, ModifyingStmt):
+            return getattr(p, "victim", None)
+        p = p.pprod
+    return None
+
 class TableRef(Prod):
     def __init__(self, parent: Prod):
         super().__init__(parent)
@@ -28,10 +36,7 @@ class TableRef(Prod):
                     return TableSubquery(p)
                 if d6() > 2:
                     return JoinedTable(p)
-            if d6() < 3:
-                return TableOrQueryName(p)
-            else:
-                return TableSample(p)
+            return TableOrQueryName(p)
         except RuntimeError:
             p.retry()
         return TableRef.factory(p)
@@ -63,46 +68,20 @@ class TargetTable(TableRef):
         return f"{self.victim_.ident()} as {self.refs[0].ident()}"
 
 
-class TableSample(TableRef):
+class TableSubquery(TableRef):
     def __init__(self, parent: Prod):
         super().__init__(parent)
-        self.match()
-        self.retry_limit = 1000
-        schema = self.scope.schema
-        self.t = None
-        while not self.t or not self.t.is_base_table:
-            pick = random_pick(schema.base_tables)
-            self.t = pick if isinstance(pick, Table) else None
-            self.retry()
-        self.refs.append(AliasedRelation(self.scope.stmt_uid("sample"), self.t))
-        self.percent = 0.1 * d100()
-        self.method = "system" if d6() > 2 else "bernoulli"
-
-    def out(self) -> str:
-        return f"{self.t.ident()} as {self.refs[0].ident()}"
-
-
-class TableSubquery(TableRef):
-    def __init__(self, parent: Prod, lateral: bool = False):
-        super().__init__(parent)
-        self.is_lateral = lateral
-        self.query = QuerySpec(self, self.scope, lateral)
+        self.query = QuerySpec(self, self.scope)
         alias = self.scope.stmt_uid("subq")
         aliased_rel = AliasedRelation(alias, self.query.select_list.derived_table)
         self.refs.append(aliased_rel)
 
     def out(self) -> str:
-        prefix = "lateral " if self.is_lateral else ""
-        return f"{prefix}({self.query.out()}) as {self.refs[0].ident()}"
+        return f"({self.query.out()}) as {self.refs[0].ident()}"
 
     def accept(self, visitor):
         self.query.accept(visitor)
         visitor.visit(self)
-
-
-class LateralSubquery(TableSubquery):
-    def __init__(self, parent: Prod):
-        super().__init__(parent, lateral=True)
 
 
 # ---------------------------------------------------------------------------
@@ -217,12 +196,6 @@ class FromClause(Prod):
         for r in ref.refs:
             self.scope.refs.append(r)
 
-        while self.scope.refs and d6() == 1:
-            lateral = LateralSubquery(self)
-            self.reflist.append(lateral)
-            for r in lateral.refs:
-                self.scope.refs.append(r)
-
     def out(self) -> str:
         if not self.reflist:
             return ""
@@ -281,15 +254,16 @@ class SelectList(Prod):
 # ---------------------------------------------------------------------------
 
 class QuerySpec(Prod):
-    def __init__(self, parent: Optional[Prod], s: Scope, lateral: bool = False):
+    def __init__(self, parent: Optional[Prod], s: Scope):
         super().__init__(parent)
         # Query blocks work on a child scope so refs introduced here do not leak outward.
         self.myscope = Scope(s)
         self.scope = self.myscope
-        self.myscope.tables = list(s.tables)
-
-        if lateral:
-            self.myscope.refs = list(s.refs)
+        mutation_target = _mutation_target_table(parent)
+        if mutation_target is None:
+            self.myscope.tables = list(s.tables)
+        else:
+            self.myscope.tables = [t for t in s.tables if t is not mutation_target]
 
         self.from_clause = FromClause(self)
         self.select_list = SelectList(self)
@@ -342,25 +316,19 @@ class _ForUpdateVerify:
             actual_table = p.t if isinstance(p.t, Table) else None
             if actual_table and not actual_table.is_insertable:
                 self.ok = False
-        if isinstance(p, TableSample):
-            actual_table = p.t if isinstance(p.t, Table) else None
-            if actual_table and not actual_table.is_insertable:
-                self.ok = False
 
 
 class SelectForUpdate(QuerySpec):
-    MODES = ["update", "share"]
-
-    def __init__(self, parent: Optional[Prod], s: Scope, lateral: bool = False):
-        super().__init__(parent, s, lateral)
-        self.lockmode: Optional[str] = None
+    def __init__(self, parent: Optional[Prod], s: Scope):
+        super().__init__(parent, s)
+        self.lockmode: Optional[str] = "update"
 
         v = _ForUpdateVerify()
         self.accept(v)
         if not v.ok:
+            self.lockmode = None
             return
 
-        self.lockmode = self.MODES[d6() % len(self.MODES)]
         self.set_quantifier = ""
 
     def out(self) -> str:
@@ -382,7 +350,8 @@ class PrepareStmt(Prod):
         self.query = QuerySpec(self, self.scope)
 
     def out(self) -> str:
-        return f"prepare prep{self.id} as {self.query.out()}"
+        escaped = self.query.out().replace("\\", "\\\\").replace("'", "\\'")
+        return f"prepare prep{self.id} from '{escaped}'"
 
     def accept(self, visitor):
         visitor.visit(self)
@@ -425,7 +394,6 @@ class ModifyingStmt(Prod):
                 self.victim = None
             self.retry()
             if (self.victim
-                    and self.victim.schema != "pg_catalog"
                     and self.victim.is_base_table
                     and self.victim.columns()):
                 break
@@ -437,7 +405,6 @@ class DeleteStmt(ModifyingStmt):
             candidates = [
                 t for t in s.tables
                 if isinstance(t, Table)
-                and t.schema != "pg_catalog"
                 and t.is_base_table
                 and t.columns()
                 and not t.is_referenced_by_fk
@@ -543,165 +510,6 @@ class UpdateStmt(ModifyingStmt):
         visitor.visit(self)
         self.search.accept(visitor)
         self.set_list.accept(visitor)
-
-
-# ---------------------------------------------------------------------------
-# RETURNING / UPSERT / MERGE / CTE
-# ---------------------------------------------------------------------------
-
-class DeleteReturning(DeleteStmt):
-    def __init__(self, parent: Optional[Prod], s: Scope, victim: Optional[Table] = None):
-        super().__init__(parent, s, victim)
-        self.match()
-        self.select_list = SelectList(self)
-
-    def out(self) -> str:
-        return f"{super().out()}{self.indent()}returning {self.select_list.out()}"
-
-    def accept(self, visitor):
-        visitor.visit(self)
-        self.search.accept(visitor)
-        self.select_list.accept(visitor)
-
-
-class UpdateReturning(UpdateStmt):
-    def __init__(self, parent: Optional[Prod], s: Scope, victim: Optional[Table] = None):
-        super().__init__(parent, s, victim)
-        self.match()
-        self.select_list = SelectList(self)
-
-    def out(self) -> str:
-        return f"{super().out()}{self.indent()}returning {self.select_list.out()}"
-
-    def accept(self, visitor):
-        visitor.visit(self)
-        self.search.accept(visitor)
-        self.set_list.accept(visitor)
-        self.select_list.accept(visitor)
-
-
-class UpsertStmt(InsertStmt):
-    def __init__(self, parent: Optional[Prod], s: Scope, victim: Optional[Table] = None):
-        super().__init__(parent, s, victim)
-        self.match()
-
-        if not self.victim.constraints:
-            self.fail("need table w/ constraint for upsert")
-
-        self.set_list = SetList(self, self.victim)
-        self.search = BoolExpr.factory(self)
-        self.constraint = random_pick(self.victim.constraints)
-
-    def out(self) -> str:
-        return (
-            f"{super().out()}"
-            f"{self.indent()}on conflict on constraint {self.constraint} do update"
-            f"{self.set_list.out()}"
-            f"{self.indent()}where {self.search.out()}"
-        )
-
-    def accept(self, visitor):
-        super().accept(visitor)
-        self.set_list.accept(visitor)
-        self.search.accept(visitor)
-
-
-class WhenClause(Prod):
-    def __init__(self, parent: "MergeStmt"):
-        super().__init__(parent)
-        self.condition = BoolExpr.factory(self)
-        self.matched = d6() > 2
-
-    @staticmethod
-    def factory(parent: "MergeStmt") -> "WhenClause":
-        try:
-            roll = d6()
-            if roll == 1:
-                return WhenClauseInsert(parent)
-            if roll == 2:
-                return WhenClauseUpdate(parent)
-            return WhenClause(parent)
-        except RuntimeError:
-            parent.retry()
-        return WhenClause.factory(parent)
-
-    def out(self) -> str:
-        if self.matched:
-            return f"when matched and {self.condition.out()} then delete"
-        return f"when not matched and {self.condition.out()} then do nothing"
-
-    def accept(self, visitor):
-        visitor.visit(self)
-        self.condition.accept(visitor)
-
-
-class WhenClauseUpdate(WhenClause):
-    def __init__(self, parent: "MergeStmt"):
-        super().__init__(parent)
-        self.myscope = Scope(parent.scope)
-        self.scope = self.myscope
-        self.scope.refs.append(parent.target_table.refs[0])
-        self.set_list = SetList(self, parent.victim)
-
-    def out(self) -> str:
-        return f"when matched and {self.condition.out()} then update{self.set_list.out()}"
-
-    def accept(self, visitor):
-        visitor.visit(self)
-        self.condition.accept(visitor)
-        self.set_list.accept(visitor)
-
-
-class WhenClauseInsert(WhenClause):
-    def __init__(self, parent: "MergeStmt"):
-        super().__init__(parent)
-        self.exprs: List[ValueExpr] = []
-        for col in parent.victim.columns():
-            expr = _safe_dml_value(self, col)
-            assert expr.type is col.type
-            self.exprs.append(expr)
-
-    def out(self) -> str:
-        values = ", ".join(expr.out() for expr in self.exprs)
-        return f"when not matched and {self.condition.out()} then insert values ({values})"
-
-    def accept(self, visitor):
-        visitor.visit(self)
-        self.condition.accept(visitor)
-        for expr in self.exprs:
-            expr.accept(visitor)
-
-
-class MergeStmt(ModifyingStmt):
-    def __init__(self, parent: Optional[Prod], s: Scope, victim: Optional[Table] = None):
-        super().__init__(parent, s, victim)
-        self.match()
-        self.target_table = TargetTable(self, self.victim)
-        self.data_source = TableRef.factory(self)
-        self.join_condition = SimpleJoinCond(self, self.target_table, self.data_source)
-
-        self.clauselist: List[WhenClause] = [WhenClause.factory(self)]
-        while d6() > 2:
-            self.clauselist.append(WhenClause.factory(self))
-
-    def out(self) -> str:
-        parts = [f"merge into {self.target_table.out()}"]
-        parts.append(self.indent())
-        parts.append(f"using {self.data_source.out()}")
-        parts.append(self.indent())
-        parts.append(f"on {self.join_condition.out()}")
-        for clause in self.clauselist:
-            parts.append(self.indent())
-            parts.append(clause.out())
-        return "".join(parts)
-
-    def accept(self, visitor):
-        visitor.visit(self)
-        self.target_table.accept(visitor)
-        self.data_source.accept(visitor)
-        self.join_condition.accept(visitor)
-        for clause in self.clauselist:
-            clause.accept(visitor)
 
 
 class CommonTableExpression(Prod):

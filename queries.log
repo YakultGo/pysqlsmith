@@ -1,0 +1,1779 @@
+select  
+  subq_0.c0 as c0
+from 
+  (select  
+        ref_0.status as c0
+      from 
+        test.orders as ref_0
+      where (EXISTS (
+          select  
+              ref_1.id as c0
+            from 
+              test.users as ref_1
+            where 0 is not NULL
+            limit 38)) 
+        or (2 <= ref_0.id)) as subq_0
+where (1) 
+  or ((38.07 > (select price from test.products limit 1 offset 44)
+        ) 
+    or (((select id from test.users limit 1 offset 32)
+           > (select id from test.orders limit 1 offset 2)
+          ) 
+      or ((select amount from test.orders limit 1 offset 2)
+           <> 11.25)));
+with cte_0 as (select  
+    ref_0.id as c0
+  from 
+    test.products as ref_0
+  where (EXISTS (
+      select  
+          ref_1.order_date as c0
+        from 
+          test.orders as ref_1
+        where 1)) 
+    or (ref_0.description is not NULL))
+select  
+    ref_0.c0 as c0, 
+    ref_0.c0 as c1
+  from 
+    cte_0 as ref_0
+  where (((ref_0.c0 is not NULL) 
+        or ((EXISTS (
+            select  
+                0 as c0
+              from 
+                test.orders as ref_1
+              where (EXISTS (
+                  select  
+                      ref_1.status as c0, 
+                      ref_0.c0 as c1, 
+                      ref_2.quantity as c2, 
+                      ref_2.amount as c3
+                    from 
+                      test.orders as ref_2
+                    where 1)) 
+                or (1))) 
+          or ((select created_at from test.users limit 1 offset 38)
+               < '2021-05-10 08:30:05'))) 
+      or ((select sum(score) from test.users)
+           >= 40.48)) 
+    or ('hello' = 'sqlsmith')
+  limit 25;
+select  
+  last_insert_id() as c0
+from 
+  test.orders as ref_0
+where EXISTS (
+  select  
+      ref_0.id as c0, 
+      ref_0.order_date as c1
+    from 
+      test.users as ref_1
+    where EXISTS (
+      select  
+          ref_2.name as c0, 
+          ref_0.quantity as c1, 
+          ref_2.email as c2
+        from 
+          test.users as ref_2
+        where 1))
+ for update;
+select  
+  ref_0.product as c0
+from 
+  test.orders as ref_0
+where ref_0.order_date <> ref_0.order_date;
+with cte_0 as (select  
+    (select score from test.users limit 1 offset 29)
+       as c0
+  from 
+    test.products as ref_0
+  where ((1) 
+      or ((ref_0.stock > ref_0.stock) 
+        or (EXISTS (
+          select  
+              (select user_id from test.orders limit 1 offset 1)
+                 as c0, 
+              ref_1.description as c1
+            from 
+              test.products as ref_1
+            where (select order_date from test.orders limit 1 offset 1)
+                 = (select created_at from test.users limit 1 offset 30)
+                )))) 
+    or (ref_0.price is not NULL))
+select  
+    ref_0.status as c0, 
+    ref_0.amount as c1
+  from 
+    test.orders as ref_0
+  where 1;
+select  
+  ref_0.quantity as c0, 
+  ref_0.quantity as c1
+from 
+  test.orders as ref_0
+where ref_0.order_date >= ref_0.order_date
+ for update;
+select  
+  concat(cast((select name from test.users limit 1 offset 2)
+       as CHAR),
+    cast(ref_0.name as CHAR)) as c0
+from 
+  test.users as ref_0
+where (EXISTS (
+    select  
+        (select product from test.orders limit 1 offset 1)
+           as c0, 
+        -19 as c1
+      from 
+        test.users as ref_1
+      where ref_0.created_at <> ref_0.created_at)) 
+  or (current_timestamp() >= ref_0.created_at);
+select  
+  (select stock from test.products limit 1 offset 1)
+     as c0
+from 
+  test.users as ref_0
+where EXISTS (
+  select  
+      0 as c0
+    from 
+      test.users as ref_1
+    where ref_1.id = ref_0.id
+    limit 69)
+limit 16;
+select  
+  (select sum(id) from test.orders)
+     as c0
+from 
+  test.products as ref_0
+where case when (select amount from test.orders limit 1 offset 38)
+         is not NULL then '2021-05-03 09:25:16' else '2021-05-03 09:25:16' end
+     < date(cast((select created_at from test.users limit 1 offset 2)
+       as DATETIME));
+with cte_0 as (select  
+    (select score from test.users limit 1 offset 25)
+       as c0
+  from 
+    test.orders as ref_0
+  where (EXISTS (
+      select  
+          (select avg(price) from test.products)
+             as c0
+        from 
+          test.users as ref_1
+        where ref_0.amount <= (select score from test.users limit 1 offset 1)
+            )) 
+    or ((select name from test.users limit 1 offset 48)
+         = (select group_concat(product) from test.orders)
+        ))
+select  
+    ref_0.product as c0, 
+    ref_0.id as c1, 
+    ref_0.amount as c2, 
+    ref_0.user_id as c3
+  from 
+    test.orders as ref_0
+  where ((ref_0.user_id < 0) 
+      or ((EXISTS (
+          select  
+              ref_0.quantity as c0, 
+              ref_0.id as c1
+            from 
+              cte_0 as ref_1
+            where (ref_0.product <> ref_0.product) 
+              or (ref_0.user_id <> ref_0.quantity))) 
+        or (((EXISTS (
+              select  
+                  (select id from test.orders limit 1 offset 1)
+                     as c0
+                from 
+                  cte_0 as ref_1
+                where 1)) 
+            or (EXISTS (
+              select  
+                  ref_0.order_date as c0
+                from 
+                  cte_0 as ref_1
+                where 1))) 
+          or (EXISTS (
+            select  
+                ref_1.c0 as c0
+              from 
+                cte_0 as ref_1
+              where ref_0.order_date = ref_0.order_date))))) 
+    or (ref_0.product is not NULL);
+with cte_0 as (select  
+    ref_0.score as c0, 
+    last_insert_id() as c1
+  from 
+    test.users as ref_0
+  where 1)
+select  
+    last_insert_id() as c0
+  from 
+    test.products as ref_0
+  where ref_0.description = ref_0.category
+  limit 29;
+with cte_0 as (select  
+    (select age from test.users limit 1 offset 2)
+       as c0
+  from 
+    test.users as ref_0
+  where abs(cast(ref_0.id as SIGNED)) <> last_insert_id()
+  limit 25)
+select  
+    ref_0.score as c0, 
+    ref_0.age as c1, 
+    -8 as c2
+  from 
+    test.users as ref_0
+  where 1;
+with cte_0 as (select  
+    ref_0.status as c0
+  from 
+    test.orders as ref_0
+  where last_insert_id() <= (select id from test.orders limit 1 offset 3)
+      
+  limit 51)
+select  
+    (select id from test.orders limit 1 offset 19)
+       as c0
+  from 
+    test.users as ref_0
+  where ref_0.age <> ref_0.id;
+select  
+  ref_0.created_at as c0
+from 
+  test.users as ref_0
+where cast(nullif(ref_0.created_at,
+    case when ref_0.email is not NULL then ref_0.created_at else ref_0.created_at end
+      ) as DATETIME) < current_timestamp();
+select  
+  ref_0.id as c0, 
+  ref_0.age as c1
+from 
+  test.users as ref_0
+where (current_timestamp() is not NULL) 
+  or ((1) 
+    or ((select quantity from test.orders limit 1 offset 2)
+         is not NULL))
+limit 62;
+with cte_0 as (select  
+    
+      avg(cast((select id from test.products limit 1 offset 50)
+           as SIGNED)) over (partition by ref_0.score order by ref_0.age) as c0, 
+    ref_0.id as c1
+  from 
+    test.users as ref_0
+  where EXISTS (
+    select  
+        ref_0.age as c0, 
+        (select max(score) from test.users)
+           as c1, 
+        ref_1.order_date as c2
+      from 
+        test.orders as ref_1
+      where ref_1.amount = ref_1.amount)), cte_1 as (select  
+    ref_0.created_at as c0, 
+    (select quantity from test.orders limit 1 offset 1)
+       as c1, 
+    ref_0.name as c2, 
+    ref_0.name as c3
+  from 
+    test.users as ref_0
+  where EXISTS (
+    select  
+        ref_1.name as c0, 
+        -39 as c1, 
+        ref_1.description as c2
+      from 
+        test.products as ref_1
+      where ref_0.name is not NULL)
+  limit 62), cte_2 as (select  
+    ref_0.id as c0
+  from 
+    test.users as ref_0
+  where last_insert_id() is not NULL
+  limit 41), cte_3 as (select  
+    ref_0.quantity as c0
+  from 
+    test.orders as ref_0
+  where ((ref_0.status is not NULL) 
+      or (ref_0.user_id <> ref_0.quantity)) 
+    or (EXISTS (
+      select  
+          ref_1.name as c0
+        from 
+          test.products as ref_1
+        where ref_0.amount < (select price from test.products limit 1 offset 3)
+            )))
+select  
+    ref_0.email as c0, 
+    
+      sum(cast(ref_0.id as SIGNED)) over (partition by ref_0.age order by ref_0.score) as c1
+  from 
+    test.users as ref_0
+  where 1;
+select  
+  
+    count(cast(ref_0.user_id as SIGNED)) over (partition by ref_0.amount order by ref_0.id,ref_0.amount) as c0
+from 
+  test.orders as ref_0
+where (ref_0.order_date > ref_0.order_date) 
+  or (EXISTS (
+    select  
+        ref_0.user_id as c0
+      from 
+        test.orders as ref_1
+      where EXISTS (
+        select  
+            ref_0.user_id as c0
+          from 
+            test.products as ref_2
+          where ref_1.amount >= ref_0.amount
+          limit 54)))
+limit 59;
+select  
+  last_insert_id() as c0, 
+  ref_0.description as c1
+from 
+  test.products as ref_0
+where ref_0.price < case when ref_0.id is not NULL then 27.26 else 27.26 end
+    
+limit 66
+ for update;
+select  
+  subq_0.c0 as c0
+from 
+  (select  
+        (select avg(id) from test.orders)
+           as c0
+      from 
+        test.users as ref_0
+      where (select order_date from test.orders limit 1 offset 1)
+           <= ref_0.created_at) as subq_0
+where subq_0.c0 <= case when (select avg(score) from test.users)
+         <> (select price from test.products limit 1 offset 2)
+         then subq_0.c0 else subq_0.c0 end
+    
+limit 61
+ for update;
+delete from test.orders where EXISTS (
+  select  
+      ref_0.price as c0
+    from 
+      test.products as ref_0
+    where (select id from test.users limit 1 offset 32)
+         < (select avg(id) from test.users)
+        
+    limit 75);
+select  
+  case when '2021-02-10 06:34:18' > (select order_date from test.orders limit 1 offset 2)
+         then ref_0.price else ref_0.price end
+     as c0, 
+  ref_0.category as c1
+from 
+  test.products as ref_0
+where ref_0.description = case when EXISTS (
+      select  
+          ref_0.id as c0
+        from 
+          test.products as ref_1
+        where '2023-02-08 09:18:13' <= '2021-01-06 07:10:37') then (select name from test.products limit 1 offset 16)
+       else (select name from test.products limit 1 offset 16)
+       end
+    ;
+select  
+  
+    max(cast(ref_0.amount as DECIMAL(20,10))) over (partition by ref_0.amount order by ref_0.id) as c0
+from 
+  test.orders as ref_0
+where ref_0.amount <> ref_0.amount;
+select  
+  current_timestamp() as c0
+from 
+  test.products as ref_0
+where EXISTS (
+  select  
+      ref_0.price as c0
+    from 
+      test.users as ref_1
+    where ref_1.created_at >= ref_1.created_at)
+limit 71
+ for update;
+with cte_0 as (select  
+    ref_0.user_id as c0, 
+    ref_0.product as c1
+  from 
+    test.orders as ref_0
+      right join test.users as ref_1
+      on (ref_0.order_date >= '2023-04-05 02:27:05')
+  where EXISTS (
+    select  
+        (select sum(score) from test.users)
+           as c0
+      from 
+        test.users as ref_2
+      where EXISTS (
+        select  
+            ref_3.user_id as c0
+          from 
+            test.orders as ref_3
+          where ref_2.age is not NULL
+          limit 81)))
+select  
+    (select user_id from test.orders limit 1 offset 2)
+       as c0
+  from 
+    test.products as ref_0
+  where ref_0.stock >= (select id from test.orders limit 1 offset 1)
+      ;
+select  
+  ref_0.category as c0, 
+  ref_0.description as c1, 
+  ref_0.category as c2
+from 
+  test.products as ref_0
+where EXISTS (
+  select  
+      (select email from test.users limit 1 offset 19)
+         as c0, 
+      ref_1.price as c1
+    from 
+      test.products as ref_1
+    where (select created_at from test.users limit 1 offset 3)
+         >= '2020-05-05 02:04:07')
+ for update;
+select  
+  ref_0.status as c0
+from 
+  test.orders as ref_0
+where ref_0.id is not NULL;
+with cte_0 as (select  
+    ref_0.email as c0
+  from 
+    test.users as ref_0
+  where 16.01 < case when (1) 
+        or ((ref_0.created_at = ref_0.created_at) 
+          or (ref_0.score <= ref_0.score)) then ref_0.score else ref_0.score end
+      ), cte_1 as (select  
+    ref_0.user_id as c0
+  from 
+    test.orders as ref_0
+      right join test.orders as ref_1
+      on (ref_0.order_date = ref_1.order_date )
+  where current_timestamp() <> '2021-04-05 09:31:02')
+select  
+    ref_0.id as c0
+  from 
+    test.orders as ref_0
+  where ref_0.amount <> ref_0.amount
+  limit 9;
+select  
+  (select id from test.users limit 1 offset 2)
+     as c0
+from 
+  test.products as ref_0
+where ref_0.stock > case when ref_0.id < ref_0.id then ref_0.stock else ref_0.stock end
+    
+ for update;
+select  
+  
+    count(cast((select id from test.orders limit 1 offset 2)
+         as SIGNED)) over (partition by subq_0.c1 order by subq_0.c0) as c0, 
+  case when 1 then current_timestamp() else current_timestamp() end
+     as c1
+from 
+  (select  
+        (select id from test.users limit 1 offset 3)
+           as c0, 
+        ref_0.order_date as c1
+      from 
+        test.orders as ref_0
+      where (1) 
+        or ((ref_0.amount < ref_0.amount) 
+          or (EXISTS (
+            select  
+                ref_0.quantity as c0
+              from 
+                test.products as ref_1
+              where EXISTS (
+                select  
+                    ref_1.price as c0
+                  from 
+                    test.products as ref_2
+                  where ref_0.amount <> ref_0.amount
+                  limit 57))))) as subq_0
+where EXISTS (
+  select  
+      ref_0.created_at as c0
+    from 
+      test.users as ref_0
+    where EXISTS (
+      select  
+          subq_0.c0 as c0
+        from 
+          test.orders as ref_1
+        where 1));
+with cte_0 as (select  
+    ref_0.id as c0
+  from 
+    test.orders as ref_0
+  where (EXISTS (
+      select  
+          ref_0.id as c0
+        from 
+          test.products as ref_1
+        where ref_0.order_date is not NULL
+        limit 29)) 
+    or ((ref_0.quantity is not NULL) 
+      or (EXISTS (
+        select  
+            (select category from test.products limit 1 offset 1)
+               as c0
+          from 
+            test.users as ref_1
+          where 1))))
+select  
+    nullif(cast(-28 as SIGNED),
+      cast((select sum(id) from test.products)
+         as SIGNED)) as c0
+  from 
+    test.users as ref_0
+  where ref_0.id is not NULL;
+select  
+  ref_0.email as c0
+from 
+  test.users as ref_0
+where EXISTS (
+  select  
+      (select amount from test.orders limit 1 offset 2)
+         as c0
+    from 
+      test.orders as ref_1
+    where (select sum(amount) from test.orders)
+         is not NULL);
+select  
+  last_insert_id() as c0
+from 
+  test.orders as ref_0
+where (select created_at from test.users limit 1 offset 1)
+     <> ref_0.order_date;
+with cte_0 as (select  
+    ref_0.order_date as c0, 
+    ref_0.order_date as c1, 
+    case when ref_0.user_id < ref_0.user_id then 27 else 27 end
+       as c2
+  from 
+    test.orders as ref_0
+  where ((select created_at from test.users limit 1 offset 3)
+         = ref_0.order_date) 
+    or (1)
+  limit 65)
+select  
+    (select stock from test.products limit 1 offset 2)
+       as c0, 
+    ref_0.id as c1
+  from 
+    test.products as ref_0
+  where case when 1 then ref_0.category else ref_0.category end
+       is not NULL;
+with cte_0 as (select  
+    -6 as c0
+  from 
+    test.orders as ref_0
+  where EXISTS (
+    select  
+        ref_0.id as c0
+      from 
+        test.users as ref_1
+      where 1)
+  limit 33)
+select  
+    subq_0.c0 as c0
+  from 
+    (select  
+          ref_0.c0 as c0
+        from 
+          cte_0 as ref_0
+        where 1) as subq_0
+  where subq_0.c0 is not NULL
+  limit 48;
+select  
+  ref_0.price as c0
+from 
+  test.products as ref_0
+    inner join test.orders as ref_1
+    on (ref_0.id = ref_1.id )
+where 1
+ for update;
+with cte_0 as (select  
+    ref_0.user_id as c0
+  from 
+    test.orders as ref_0
+      right join test.users as ref_1
+      on (ref_0.product = ref_1.name )
+  where ref_1.name is not NULL)
+select  
+    case when 1 then ref_0.price else ref_0.price end
+       as c0
+  from 
+    test.products as ref_0
+  where ref_0.id > (select id from test.products limit 1 offset 1)
+      ;
+with cte_0 as (select  
+    (select max(price) from test.products)
+       as c0
+  from 
+    test.products as ref_0
+  where cast(coalesce(ref_0.price,
+      ref_0.price) as DECIMAL(20,10)) >= ref_0.price)
+select  
+    ref_0.stock as c0
+  from 
+    test.products as ref_0
+  where (EXISTS (
+      select  
+          ref_1.category as c0, 
+          (select max(score) from test.users)
+             as c1, 
+          ref_0.description as c2, 
+          ref_1.price as c3
+        from 
+          test.products as ref_1
+        where EXISTS (
+          select  
+              ref_2.id as c0, 
+              ref_1.name as c1
+            from 
+              test.products as ref_2
+            where ref_1.id >= ref_0.id)
+        limit 88)) 
+    or (1);
+select  
+  ref_2.score as c0
+from 
+  test.users as ref_0
+    right join test.users as ref_1
+      right join test.users as ref_2
+      on (ref_1.age = ref_2.id )
+    on (EXISTS (
+        select  
+            ref_3.quantity as c0
+          from 
+            test.orders as ref_3
+          where ref_2.created_at = ref_0.created_at
+          limit 13))
+where 1
+limit 36;
+select  
+  subq_0.c0 as c0
+from 
+  (select  
+        ref_0.id as c0, 
+        ref_0.amount as c1
+      from 
+        test.orders as ref_0
+      where (1) 
+        or ((select name from test.users limit 1 offset 2)
+             is not NULL)) as subq_0
+where (select avg(score) from test.users)
+     is not NULL
+limit 6;
+select  
+  case when EXISTS (
+      select  
+          ref_1.age as c0
+        from 
+          test.users as ref_1
+        where ref_1.score = ref_1.score) then ref_0.quantity else ref_0.quantity end
+     as c0
+from 
+  test.orders as ref_0
+where ref_0.user_id is not NULL;
+select  
+  case when ref_0.quantity is not NULL then ref_1.description else ref_1.description end
+     as c0
+from 
+  test.orders as ref_0
+    right join test.products as ref_1
+    on (ref_0.user_id = ref_1.id )
+where (select price from test.products limit 1 offset 3)
+     > case when EXISTS (
+      select  
+          ref_1.id as c0
+        from 
+          test.products as ref_2
+        where ref_1.id >= ref_1.id
+        limit 42) then ref_0.amount else ref_0.amount end
+    
+limit 26;
+select  
+  
+    count(cast(ref_0.id as SIGNED)) over (partition by ref_0.age,ref_0.email order by ref_0.age,ref_0.email) as c0
+from 
+  test.users as ref_0
+where 1
+limit 44;
+select  
+  current_timestamp() as c0
+from 
+  test.products as ref_0
+    inner join test.orders as ref_1
+    on (ref_0.price = ref_1.amount )
+where ref_1.id is not NULL
+ for update;
+select  
+  case when EXISTS (
+      select  
+          22 as c0
+        from 
+          test.orders as ref_1
+        where ref_0.age is not NULL) then case when ref_0.age = ref_0.age then ref_0.created_at else ref_0.created_at end
+       else case when ref_0.age = ref_0.age then ref_0.created_at else ref_0.created_at end
+       end
+     as c0
+from 
+  test.users as ref_0
+where EXISTS (
+  select  
+      ref_1.created_at as c0
+    from 
+      test.users as ref_1
+    where ref_1.email is not NULL)
+limit 47;
+select  
+  ref_0.score as c0
+from 
+  test.users as ref_0
+where ref_0.score <= ref_0.score;
+select  
+  33 as c0
+from 
+  test.orders as ref_0
+where ref_0.product is not NULL;
+select  
+  ref_0.user_id as c0
+from 
+  test.orders as ref_0
+where ((EXISTS (
+      select  
+          ref_1.description as c0
+        from 
+          test.products as ref_1
+        where 1)) 
+    or ((ref_0.quantity <= (select id from test.orders limit 1 offset 1)
+          ) 
+      or (1))) 
+  or (EXISTS (
+    select  
+        -6 as c0
+      from 
+        test.users as ref_1
+      where EXISTS (
+        select  
+            ref_2.name as c0
+          from 
+            test.users as ref_2
+          where EXISTS (
+            select  
+                ref_2.name as c0
+              from 
+                test.products as ref_3
+              where ref_2.score <> ref_3.price)
+          limit 41)));
+select  
+  case when ref_0.created_at >= ref_0.created_at then ref_0.age else ref_0.age end
+     as c0
+from 
+  test.users as ref_0
+where 1
+ for update;
+select  
+  case when ref_0.email is not NULL then (select email from test.users limit 1 offset 3)
+       else (select email from test.users limit 1 offset 3)
+       end
+     as c0
+from 
+  test.users as ref_0
+where ((ref_0.id is not NULL) 
+    or (EXISTS (
+      select  
+          ref_1.user_id as c0
+        from 
+          test.orders as ref_1
+        where (select id from test.users limit 1 offset 3)
+             <= ref_1.id))) 
+  or ((select id from test.orders limit 1 offset 2)
+       > ref_0.id);
+with cte_0 as (select  
+    -12 as c0
+  from 
+    test.users as ref_0
+  where (select order_date from test.orders limit 1 offset 1)
+       <= ref_0.created_at), cte_1 as (select  
+    ref_0.order_date as c0
+  from 
+    test.orders as ref_0
+  where ref_0.amount <> ref_0.amount)
+select  
+    ref_0.c0 as c0
+  from 
+    cte_1 as ref_0
+  where last_insert_id() <> 16;
+select  
+  ref_0.email as c0
+from 
+  test.users as ref_0
+where substring(cast((select name from test.users limit 1 offset 3)
+       as CHAR),
+    cast(case when (EXISTS (
+          select  
+              ref_1.amount as c0
+            from 
+              test.orders as ref_1
+            where ref_1.quantity < ref_1.quantity
+            limit 83)) 
+        or (ref_0.score <= ref_0.score) then (select sum(id) from test.products)
+         else (select sum(id) from test.products)
+         end
+       as SIGNED)) is not NULL;
+select  
+  current_timestamp() as c0
+from 
+  test.products as ref_0
+    right join test.orders as ref_1
+    on (ref_1.amount <> (select avg(score) from test.users)
+          )
+where substring(cast((select name from test.users limit 1 offset 1)
+       as CHAR),
+    cast(-26 as SIGNED),
+    cast(ref_1.user_id as SIGNED)) is not NULL
+limit 31;
+with cte_0 as (select distinct 
+    ref_0.id as c0, 
+    case when ref_0.id = ref_0.id then ref_0.status else ref_0.status end
+       as c1
+  from 
+    test.orders as ref_0
+  where ref_0.amount is not NULL
+  limit 67)
+select  
+    current_timestamp() as c0
+  from 
+    test.orders as ref_0
+  where ref_0.user_id >= last_insert_id();
+select  
+  current_timestamp() as c0
+from 
+  test.users as ref_0
+where ((select product from test.orders limit 1 offset 3)
+       = (select product from test.orders limit 1 offset 32)
+      ) 
+  or (ref_0.score > ref_0.score);
+select  
+  ref_1.status as c0
+from 
+  test.orders as ref_0
+    right join test.orders as ref_1
+    on (ref_0.amount = (select score from test.users limit 1 offset 1)
+          )
+where 1;
+select  
+  
+    avg(cast(ref_0.amount as DECIMAL(20,10))) over (partition by ref_0.id order by ref_0.status) as c0
+from 
+  test.orders as ref_0
+    right join test.users as ref_1
+    on (ref_0.id = ref_1.id )
+where EXISTS (
+  select  
+      ref_0.quantity as c0
+    from 
+      test.users as ref_2
+    where EXISTS (
+      select  
+          ref_2.age as c0, 
+          ref_2.score as c1
+        from 
+          test.products as ref_3
+        where ref_2.email is not NULL));
+with cte_0 as (select  
+    ref_0.amount as c0
+  from 
+    test.orders as ref_0
+  where (1) 
+    or (1)
+  limit 33), cte_1 as (select  
+    case when EXISTS (
+        select  
+            ref_2.stock as c0
+          from 
+            test.products as ref_2
+          where EXISTS (
+            select  
+                0 as c0
+              from 
+                test.orders as ref_3
+              where EXISTS (
+                select  
+                    ref_1.status as c0, 
+                    ref_4.price as c1
+                  from 
+                    test.products as ref_4
+                  where ref_3.order_date <> ref_1.order_date
+                  limit 19)
+              limit 75)
+          limit 8) then 4 else 4 end
+       as c0, 
+    (select order_date from test.orders limit 1 offset 20)
+       as c1
+  from 
+    test.products as ref_0
+      inner join test.orders as ref_1
+      on (ref_1.order_date <= ref_1.order_date)
+  where (ref_1.user_id >= ref_1.user_id) 
+    or (((EXISTS (
+          select  
+              ref_1.order_date as c0
+            from 
+              test.products as ref_2
+            where 1
+            limit 26)) 
+        or ((EXISTS (
+            select  
+                0 as c0
+              from 
+                test.products as ref_2
+              where ((1) 
+                  or (1)) 
+                or (ref_0.price is not NULL)
+              limit 42)) 
+          or (EXISTS (
+            select  
+                (select score from test.users limit 1 offset 1)
+                   as c0
+              from 
+                test.products as ref_2
+              where (ref_0.price <> (select price from test.products limit 1 offset 3)
+                    ) 
+                or (1)
+              limit 55)))) 
+      or (ref_1.order_date is not NULL))), cte_2 as (select  
+    ref_0.amount as c0
+  from 
+    test.orders as ref_0
+      right join test.users as ref_1
+      on (13 is not NULL)
+  where EXISTS (
+    select  
+        0 as c0
+      from 
+        test.orders as ref_2
+      where ref_2.product is not NULL)), cte_3 as (select  
+    -11 as c0, 
+    ref_0.id as c1
+  from 
+    test.products as ref_0
+  where ref_0.id = ref_0.stock)
+select  
+    ref_0.c0 as c0, 
+    -27 as c1, 
+    ref_0.c0 as c2, 
+    last_insert_id() as c3
+  from 
+    cte_1 as ref_0
+  where ref_0.c0 < (select id from test.users limit 1 offset 40)
+      ;
+select  
+  last_insert_id() as c0
+from 
+  test.products as ref_0
+where case when ((((ref_0.id = ref_0.id) 
+            or (ref_0.stock is not NULL)) 
+          or (ref_0.stock <> ref_0.stock)) 
+        or ((EXISTS (
+            select  
+                ref_0.category as c0
+              from 
+                test.users as ref_1
+              where (select product from test.orders limit 1 offset 2)
+                   <> ref_0.description
+              limit 71)) 
+          or ((select created_at from test.users limit 1 offset 2)
+               = (select created_at from test.users limit 1 offset 23)
+              ))) 
+      or ((ref_0.price > ref_0.price) 
+        or (EXISTS (
+          select  
+              ref_0.name as c0
+            from 
+              test.products as ref_1
+            where EXISTS (
+              select  
+                  ref_0.category as c0
+                from 
+                  test.orders as ref_2
+                where ref_2.user_id >= ref_2.id)))) then ref_0.stock else ref_0.stock end
+     >= -1;
+select  
+  
+    max(cast(ref_0.stock as SIGNED)) over (partition by ref_0.id order by ref_0.id) as c0
+from 
+  test.products as ref_0
+where EXISTS (
+  select  
+      ref_0.category as c0
+    from 
+      test.orders as ref_1
+    where ref_1.amount < ref_1.amount);
+select  
+  ref_0.category as c0
+from 
+  test.products as ref_0
+where EXISTS (
+  select  
+      (select stock from test.products limit 1 offset 3)
+         as c0
+    from 
+      test.orders as ref_1
+    where ref_1.order_date <> ref_1.order_date)
+ for update;
+select  
+  35 as c0
+from 
+  test.orders as ref_0
+    inner join test.orders as ref_1
+    on (ref_0.order_date = ref_1.order_date )
+where last_insert_id() <= case when ref_0.order_date is not NULL then ref_0.id else ref_0.id end
+    ;
+with cte_0 as (select  
+    (select sum(amount) from test.orders)
+       as c0, 
+    ref_0.name as c1, 
+    ref_0.description as c2, 
+    ifnull(cast(ref_0.price as DECIMAL(20,10)),
+      cast((select sum(amount) from test.orders)
+         as DECIMAL(20,10))) as c3
+  from 
+    test.products as ref_0
+  where ref_0.price <> ref_0.price)
+select  
+    ref_0.name as c0
+  from 
+    test.products as ref_0
+  where (EXISTS (
+      select  
+          ref_0.description as c0
+        from 
+          test.products as ref_1
+        where ref_1.id <= ref_1.id)) 
+    or (EXISTS (
+      select  
+          0 as c0, 
+          ref_1.c1 as c1, 
+          ref_1.c1 as c2
+        from 
+          cte_0 as ref_1
+        where (select order_date from test.orders limit 1 offset 3)
+             > '2021-06-06 03:09:07'))
+  limit 81;
+with cte_0 as (select  
+    case when (select price from test.products limit 1 offset 20)
+           = (select sum(amount) from test.orders)
+           then 19 else 19 end
+       as c0
+  from 
+    test.products as ref_0
+  where (ref_0.price <= ref_0.price) 
+    or (ref_0.price is not NULL)), cte_1 as (select  
+    (select sum(id) from test.users)
+       as c0, 
+    ref_0.product as c1, 
+    case when EXISTS (
+        select  
+            -17 as c0
+          from 
+            test.users as ref_1
+          where ref_1.email <> ref_0.product
+          limit 47) then 0 else 0 end
+       as c2
+  from 
+    test.orders as ref_0
+  where (EXISTS (
+      select  
+          (select avg(score) from test.users)
+             as c0, 
+          ref_0.user_id as c1
+        from 
+          test.products as ref_1
+        where ref_0.amount is not NULL)) 
+    or (1))
+select  
+    case when (EXISTS (
+          select  
+              ref_0.amount as c0, 
+              (select product from test.orders limit 1 offset 44)
+                 as c1, 
+              ref_1.stock as c2
+            from 
+              test.products as ref_1
+            where ref_0.order_date <> ref_0.order_date
+            limit 47)) 
+        or (EXISTS (
+          select  
+              ref_0.product as c0
+            from 
+              test.users as ref_1
+            where EXISTS (
+              select  
+                  ref_2.name as c0
+                from 
+                  test.users as ref_2
+                where ref_2.score < 32.30
+                limit 80))) then ref_0.user_id else ref_0.user_id end
+       as c0, 
+    ref_0.quantity as c1
+  from 
+    test.orders as ref_0
+  where (1) 
+    or ((ref_0.amount >= ref_0.amount) 
+      or ((EXISTS (
+          select  
+              ref_0.status as c0, 
+              (select quantity from test.orders limit 1 offset 2)
+                 as c1
+            from 
+              test.users as ref_1
+            where 1)) 
+        or (1)))
+  limit 22;
+select  
+  (select avg(id) from test.orders)
+     as c0, 
+  cast(coalesce(nullif(cast((select order_date from test.orders limit 1 offset 43)
+         as DATETIME),
+      cast('2022-02-05 05:16:38' as DATETIME)),
+    (select created_at from test.users limit 1 offset 2)
+      ) as DATETIME) as c1, 
+  -25 as c2
+from 
+  (select  
+        ref_0.age as c0
+      from 
+        test.users as ref_0
+      where (select email from test.users limit 1 offset 3)
+           is not NULL) as subq_0
+where (subq_0.c0 > abs(cast(subq_0.c0 as SIGNED))) 
+  or (-9 = subq_0.c0)
+limit 56
+ for update;
+with cte_0 as (select  
+    0 as c0, 
+    cast(nullif(ref_0.id,
+      ref_0.id) as SIGNED) as c1
+  from 
+    test.products as ref_0
+  where ref_0.id is not NULL)
+select  
+    (select quantity from test.orders limit 1 offset 2)
+       as c0
+  from 
+    test.products as ref_0
+  where (ref_0.price < ref_0.price) 
+    or (1)
+  limit 70;
+delete from test.orders where ((test.orders.order_date >= test.orders.order_date) 
+    or ((EXISTS (
+        select  
+            test.orders.order_date as c0
+          from 
+            test.users as ref_0
+          where EXISTS (
+            select  
+                ref_1.score as c0
+              from 
+                test.users as ref_1
+              where (select avg(id) from test.users)
+                   > (select id from test.products limit 1 offset 3)
+                  ))) 
+      or (EXISTS (
+        select  
+            ref_0.name as c0, 
+            ref_0.category as c1
+          from 
+            test.products as ref_0
+          where (EXISTS (
+              select  
+                  (select id from test.products limit 1 offset 2)
+                     as c0, 
+                  (select name from test.users limit 1 offset 2)
+                     as c1
+                from 
+                  test.users as ref_1
+                where ref_0.price < (select avg(price) from test.products)
+                    
+                limit 79)) 
+            or ('2020-02-01 03:07:01' <> test.orders.order_date))))) 
+  or (test.orders.order_date = test.orders.order_date);
+with cte_0 as (select  
+    ref_0.category as c0
+  from 
+    test.products as ref_0
+  where ref_0.price = (select amount from test.orders limit 1 offset 18)
+      )
+select  
+    (select status from test.orders limit 1 offset 2)
+       as c0, 
+    ref_0.amount as c1
+  from 
+    test.orders as ref_0
+  where current_timestamp() = cast(coalesce(ref_0.order_date,
+      (select order_date from test.orders limit 1 offset 3)
+        ) as DATETIME);
+select  
+  current_timestamp() as c0, 
+  case when ref_0.price is not NULL then ref_0.price else ref_0.price end
+     as c1
+from 
+  test.products as ref_0
+where (ref_0.price is not NULL) 
+  or (1)
+ for update;
+select  
+  
+    max(cast(ref_0.quantity as SIGNED)) over (partition by ref_0.amount order by ref_0.user_id) as c0, 
+  ref_0.user_id as c1
+from 
+  test.orders as ref_0
+where (select group_concat(name) from test.users)
+     is not NULL
+limit 45;
+select  
+  upper(cast(ref_0.email as CHAR)) as c0, 
+  cast(coalesce(ref_0.age,
+    ref_0.id) as SIGNED) as c1
+from 
+  test.users as ref_0
+where case when EXISTS (
+      select  
+          -7 as c0, 
+          ref_0.email as c1, 
+          ref_1.price as c2, 
+          ref_1.description as c3, 
+          ref_0.age as c4
+        from 
+          test.products as ref_1
+        where ref_0.email is not NULL) then ref_0.created_at else ref_0.created_at end
+     = ref_0.created_at;
+select  
+  ref_0.amount as c0
+from 
+  test.orders as ref_0
+where EXISTS (
+  select  
+      ref_0.product as c0, 
+      ref_1.order_date as c1
+    from 
+      test.orders as ref_1
+    where EXISTS (
+      select  
+          (select quantity from test.orders limit 1 offset 3)
+             as c0, 
+          ref_1.product as c1
+        from 
+          test.users as ref_2
+        where (((EXISTS (
+                select  
+                    ref_1.order_date as c0, 
+                    ref_2.created_at as c1
+                  from 
+                    test.products as ref_3
+                  where EXISTS (
+                    select  
+                        (select status from test.orders limit 1 offset 2)
+                           as c0
+                      from 
+                        test.products as ref_4
+                      where 1))) 
+              or (ref_0.order_date is not NULL)) 
+            or (ref_0.product is not NULL)) 
+          or (EXISTS (
+            select  
+                ref_3.id as c0
+              from 
+                test.orders as ref_3
+              where ref_0.status is not NULL)))
+    limit 70)
+limit 46
+ for update;
+with cte_0 as (select  
+    ref_0.stock as c0
+  from 
+    test.products as ref_0
+  where ref_0.stock <> -19
+  limit 32)
+select  
+    ref_1.id as c0
+  from 
+    test.products as ref_0
+      right join test.orders as ref_1
+      on (ref_0.stock = ref_1.id )
+  where (select max(score) from test.users)
+       < ref_0.price;
+with cte_0 as (select  
+    ref_0.amount as c0, 
+    ref_0.status as c1
+  from 
+    test.orders as ref_0
+  where ref_0.user_id is not NULL
+  limit 39)
+select  
+    ref_0.category as c0, 
+    ref_0.name as c1, 
+    (select id from test.products limit 1 offset 41)
+       as c2
+  from 
+    test.products as ref_0
+  where ((select status from test.orders limit 1 offset 24)
+         is not NULL) 
+    or (((ref_0.price is not NULL) 
+        or (ref_0.id is not NULL)) 
+      or ('2021-01-05 10:29:03' < (select created_at from test.users limit 1 offset 2)
+          ));
+select  
+  ref_0.id as c0
+from 
+  test.orders as ref_0
+    right join test.products as ref_1
+    on (ref_0.status = ref_1.name )
+where (ref_0.order_date = ref_0.order_date) 
+  or ((ref_0.amount >= (select sum(price) from test.products)
+        ) 
+    or (ref_1.price <> ref_1.price));
+select  
+  case when (1) 
+      or (ref_0.price >= ref_0.price) then (select sum(id) from test.orders)
+       else (select sum(id) from test.orders)
+       end
+     as c0, 
+  case when EXISTS (
+      select  
+          ref_1.name as c0, 
+          ref_0.name as c1
+        from 
+          test.products as ref_1
+        where EXISTS (
+          select  
+              ref_1.stock as c0, 
+              0 as c1
+            from 
+              test.users as ref_2
+            where (select id from test.orders limit 1 offset 14)
+                 >= ref_0.id)
+        limit 30) then current_timestamp() else current_timestamp() end
+     as c1
+from 
+  test.products as ref_0
+where 1;
+select  
+  ref_0.id as c0
+from 
+  test.orders as ref_0
+where case when (select id from test.users limit 1 offset 3)
+         >= (select id from test.users limit 1 offset 1)
+         then ref_0.quantity else ref_0.quantity end
+     is not NULL
+ for update;
+with cte_0 as (select  
+    current_timestamp() as c0
+  from 
+    test.orders as ref_0
+  where 1)
+select  
+    ref_0.age as c0
+  from 
+    test.users as ref_0
+  where ref_0.created_at < ref_0.created_at;
+select  
+  (select id from test.users limit 1 offset 2)
+     as c0
+from 
+  test.orders as ref_0
+where ref_0.amount = (select price from test.products limit 1 offset 46)
+    
+limit 62;
+with cte_0 as (select  
+    ref_0.score as c0, 
+    ref_0.email as c1
+  from 
+    test.users as ref_0
+  where (ref_0.score <= ref_0.score) 
+    or (ref_0.score is not NULL))
+select  
+    ref_0.quantity as c0, 
+    ref_0.user_id as c1
+  from 
+    test.orders as ref_0
+  where EXISTS (
+    select  
+        ref_1.price as c0, 
+        -13 as c1
+      from 
+        test.products as ref_1
+      where 1
+      limit 82)
+  limit 24;
+select  
+  (select user_id from test.orders limit 1 offset 20)
+     as c0, 
+  ref_0.status as c1, 
+  current_timestamp() as c2
+from 
+  test.orders as ref_0
+where (ref_0.status <> (select name from test.products limit 1 offset 3)
+      ) 
+  or (ref_0.status is not NULL)
+ for update;
+with cte_0 as (select  
+    (select status from test.orders limit 1 offset 2)
+       as c0
+  from 
+    test.orders as ref_0
+  where EXISTS (
+    select  
+        (select order_date from test.orders limit 1 offset 1)
+           as c0
+      from 
+        test.users as ref_1
+      where EXISTS (
+        select  
+            ref_0.id as c0
+          from 
+            test.users as ref_2
+          where 1
+          limit 82)
+      limit 92))
+select  
+    ref_0.name as c0
+  from 
+    test.products as ref_0
+  where EXISTS (
+    select  
+        ref_1.name as c0
+      from 
+        test.products as ref_1
+      where (select created_at from test.users limit 1 offset 1)
+           < '2022-05-10 06:14:32');
+with cte_0 as (select  
+    ref_0.quantity as c0, 
+    ref_0.order_date as c1
+  from 
+    test.orders as ref_0
+  where EXISTS (
+    select  
+        ref_0.status as c0, 
+        ref_0.order_date as c1
+      from 
+        test.orders as ref_1
+      where ref_0.id <= ref_1.quantity))
+select  
+    (select sum(id) from test.products)
+       as c0, 
+    ref_0.created_at as c1
+  from 
+    test.users as ref_0
+  where ((ref_0.created_at = ref_0.created_at) 
+      or ('2022-06-07 02:41:40' <> ref_0.created_at)) 
+    or (1)
+  limit 81;
+select  
+  ref_0.email as c0
+from 
+  test.users as ref_0
+where ref_0.age > ref_0.age
+ for update;
+select  
+  ref_0.email as c0
+from 
+  test.users as ref_0
+where EXISTS (
+  select  
+      ref_0.name as c0
+    from 
+      test.orders as ref_1
+    where EXISTS (
+      select  
+          (select category from test.products limit 1 offset 1)
+             as c0
+        from 
+          test.products as ref_2
+        where (select quantity from test.orders limit 1 offset 22)
+             is not NULL))
+ for update;
+select  
+  (select id from test.products limit 1 offset 1)
+     as c0, 
+  case when ref_0.quantity <> ref_0.id then ref_0.product else ref_0.product end
+     as c1
+from 
+  test.orders as ref_0
+where (select count(id) from test.orders)
+     > ref_0.quantity
+limit 42;
+select  
+  7 as c0
+from 
+  test.orders as ref_0
+where '2021-01-10 05:19:14' > ref_0.order_date;
+select  
+  0 as c0
+from 
+  test.users as ref_0
+where (ref_0.email is not NULL) 
+  or ((((ref_0.age is not NULL) 
+        or (EXISTS (
+          select  
+              ref_0.id as c0, 
+              -11 as c1
+            from 
+              test.users as ref_1
+            where EXISTS (
+              select  
+                  ref_0.score as c0
+                from 
+                  test.users as ref_2
+                where (ref_1.created_at <= ref_2.created_at) 
+                  or (1))
+            limit 53))) 
+      or (1)) 
+    or (ref_0.score is not NULL));
+with cte_0 as (select  
+    
+      avg(cast(ref_0.score as DECIMAL(20,10))) over (partition by ref_0.age,ref_0.id order by ref_0.age) as c0, 
+    0 as c1
+  from 
+    test.users as ref_0
+  where (select avg(price) from test.products)
+       <= ref_0.score
+  limit 57), cte_1 as (select  
+    current_timestamp() as c0, 
+    ref_0.id as c1, 
+    ref_0.id as c2
+  from 
+    test.users as ref_0
+  where ref_0.age < ref_0.id
+  limit 58)
+select  
+    ref_0.age as c0
+  from 
+    test.users as ref_0
+  where EXISTS (
+    select  
+        0 as c0
+      from 
+        cte_1 as ref_1
+      where ref_0.email = ref_0.email
+      limit 91)
+  limit 50;
+with cte_0 as (select  
+    case when (select id from test.products limit 1 offset 1)
+           <= (select id from test.users limit 1 offset 1)
+           then ref_0.quantity else ref_0.quantity end
+       as c0
+  from 
+    test.orders as ref_0
+  where (select id from test.orders limit 1 offset 5)
+       > last_insert_id())
+select  
+    ref_1.id as c0
+  from 
+    test.orders as ref_0
+      left join test.users as ref_1
+      on (ref_0.id = ref_1.id )
+  where ('2023-06-07 10:16:10' < ref_0.order_date) 
+    or (ref_0.id <> ref_0.user_id);
+select  
+  ref_0.name as c0, 
+  ref_0.stock as c1
+from 
+  test.products as ref_0
+where ref_0.id is not NULL;
+select  
+  ref_0.amount as c0, 
+  ref_0.order_date as c1
+from 
+  test.orders as ref_0
+where (1) 
+  or ((EXISTS (
+      select  
+          ref_0.id as c0, 
+          ref_0.user_id as c1
+        from 
+          test.orders as ref_1
+        where (select product from test.orders limit 1 offset 1)
+             = ref_1.product
+        limit 54)) 
+    or (1))
+ for update;
+select  
+  ref_1.age as c0
+from 
+  test.products as ref_0
+    inner join test.users as ref_1
+    on (ref_0.category = ref_1.name )
+where EXISTS (
+  select  
+      ref_1.age as c0, 
+      ref_2.order_date as c1
+    from 
+      test.orders as ref_2
+    where EXISTS (
+      select  
+          ref_1.id as c0
+        from 
+          test.orders as ref_3
+        where (1) 
+          or (ref_3.user_id is not NULL)))
+ for update;
+select  
+  
+    max(cast(ref_0.price as DECIMAL(20,10))) over (partition by ref_0.category order by ref_0.stock,ref_1.price,ref_0.category) as c0
+from 
+  test.products as ref_0
+    right join test.products as ref_1
+    on (ref_0.name = ref_1.name )
+where ref_1.id is not NULL
+limit 47;
+select  
+  ref_0.id as c0
+from 
+  test.products as ref_0
+where 1
+limit 73;
+select  
+  last_insert_id() as c0
+from 
+  test.products as ref_0
+where ref_0.name = ref_0.name;
+select  
+  ifnull(cast('2023-03-06 10:16:28' as DATETIME),
+    cast(ref_0.order_date as DATETIME)) as c0
+from 
+  test.orders as ref_0
+where (select id from test.users limit 1 offset 2)
+     <> last_insert_id();
+with cte_0 as (select  
+    ref_0.price as c0
+  from 
+    test.products as ref_0
+  where case when ref_0.stock is not NULL then ref_0.category else ref_0.category end
+       = ref_0.description)
+select  
+    ref_0.c0 as c0, 
+    (select price from test.products limit 1 offset 2)
+       as c1
+  from 
+    cte_0 as ref_0
+  where current_timestamp() < '2022-06-01 01:05:07';
+with cte_0 as (select  
+    (select sum(score) from test.users)
+       as c0
+  from 
+    test.orders as ref_0
+  where ref_0.order_date > ref_0.order_date), cte_1 as (select  
+    ref_0.product as c0
+  from 
+    test.orders as ref_0
+  where (select quantity from test.orders limit 1 offset 46)
+       is not NULL
+  limit 10), cte_2 as (select  
+    ref_0.created_at as c0
+  from 
+    test.users as ref_0
+  where (select max(score) from test.users)
+       >= 41.33), cte_3 as (select  
+    ref_0.product as c0
+  from 
+    test.orders as ref_0
+  where (select score from test.users limit 1 offset 40)
+       >= ref_0.amount), cte_4 as (select  
+    ref_0.price as c0, 
+    ref_0.price as c1
+  from 
+    test.products as ref_0
+  where 1), cte_5 as (select  
+    ref_0.score as c0
+  from 
+    test.users as ref_0
+  where (ref_0.score = (select amount from test.orders limit 1 offset 3)
+        ) 
+    or ((select stock from test.products limit 1 offset 34)
+         is not NULL))
+select  
+    ref_0.category as c0
+  from 
+    test.products as ref_0
+  where EXISTS (
+    select  
+        ref_0.description as c0
+      from 
+        cte_0 as ref_1
+      where EXISTS (
+        select  
+            (select email from test.users limit 1 offset 3)
+               as c0
+          from 
+            test.products as ref_2
+          where ref_0.stock < (select avg(id) from test.users)
+              
+          limit 14));
+select  
+  last_insert_id() as c0, 
+  subq_0.c3 as c1
+from 
+  test.users as ref_0
+    inner join (select  
+          ref_1.score as c0, 
+          (select count(id) from test.users)
+             as c1, 
+          ref_1.id as c2, 
+          ref_1.id as c3, 
+          (select score from test.users limit 1 offset 3)
+             as c4
+        from 
+          test.users as ref_1
+        where ref_1.score is not NULL
+        limit 41) as subq_0
+    on (ref_0.id = subq_0.c1 )
+where EXISTS (
+  select  
+      (select user_id from test.orders limit 1 offset 1)
+         as c0, 
+      subq_0.c2 as c1
+    from 
+      test.orders as ref_1
+    where (1) 
+      or (1))
+ for update;
+with cte_0 as (select  
+    ref_0.age as c0, 
+    case when ref_0.id is not NULL then ref_0.id else ref_0.id end
+       as c1
+  from 
+    test.users as ref_0
+  where EXISTS (
+    select  
+        ref_1.user_id as c0
+      from 
+        test.orders as ref_1
+      where 1))
+select  
+    ref_0.order_date as c0, 
+    case when ref_0.order_date > ref_0.order_date then -2 else -2 end
+       as c1
+  from 
+    test.orders as ref_0
+  where ref_0.amount is not NULL
+  limit 23;

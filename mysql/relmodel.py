@@ -32,90 +32,6 @@ class SQLType:
         return f"SQLType({self.name!r})"
 
 
-class PGType(SQLType):
-    """PostgreSQL-aware type with pseudotype compatibility rules."""
-
-    INVALID_OID = 0
-
-    def __init__(
-        self,
-        name: str,
-        schema: str,
-        oid: int,
-        typdelim: str,
-        typrelid: int,
-        typelem: int,
-        typarray: int,
-        typtype: str,
-        rngsubtype: int = 0,
-        rngmultitypid: int = 0,
-        rngrangetype: int = 0,
-    ):
-        super().__init__(name)
-        self.schema = schema
-        self.oid = oid
-        self.typdelim = typdelim
-        self.typrelid = typrelid
-        self.typelem = typelem
-        self.typarray = typarray
-        self.typtype = typtype
-        self.rngsubtype = rngsubtype
-        self.rngmultitypid = rngmultitypid
-        self.rngrangetype = rngrangetype
-
-    def consistent(self, rvalue: "SQLType") -> bool:
-        if not isinstance(rvalue, PGType):
-            return False
-
-        t = rvalue
-
-        if self.typtype in ("b", "c", "d", "r", "e", "m"):
-            return self is t
-
-        if self.typtype == "p":
-            if self.name == "anyarray":
-                return t.typelem != self.INVALID_OID
-            if self.name == "anymultirange":
-                return t.typtype == "m"
-            if self.name == "anynonarray":
-                return t.typelem == self.INVALID_OID
-            if self.name == "anyenum":
-                return t.typtype == "e"
-            if self.name == "any":
-                return True
-            if self.name == "anycompatible":
-                return True
-            if self.name == "anycompatiblearray":
-                return t.typelem != self.INVALID_OID
-            if self.name == "anycompatiblemultirange":
-                return t.typtype == "m"
-            if self.name == "anycompatiblenonarray":
-                return t.typelem == self.INVALID_OID
-            if self.name == "anycompatiblerange":
-                return t.typtype == "r"
-            if self.name == "anyelement":
-                return t.typelem == self.INVALID_OID
-            if self.name == "anyrange":
-                return t.typtype == "r"
-            if self.name == "record":
-                return t.typtype == "c"
-            if self.name == "cstring":
-                return self is t
-            return False
-
-        raise RuntimeError(f"unknown pg typtype: {self.typtype}")
-
-    @property
-    def is_pseudotype(self) -> bool:
-        return self.typtype == "p"
-
-    @property
-    def cast_name(self) -> str:
-        if self.schema and self.schema not in ("pg_catalog", "public"):
-            return f'{self.schema}."{self.name}"'
-        return self.name
-
-
 class Column:
     """Column metadata carried into generation.
 
@@ -133,6 +49,8 @@ class Column:
         fk_ref_schema: str = "",
         fk_ref_table: str = "",
         fk_ref_column: str = "",
+        enum_values: Optional[List[str]] = None,
+        set_values: Optional[List[str]] = None,
     ):
         self.name = name
         self.type = type_
@@ -143,6 +61,8 @@ class Column:
         self.fk_ref_schema = fk_ref_schema
         self.fk_ref_table = fk_ref_table
         self.fk_ref_column = fk_ref_column
+        self.enum_values = list(enum_values or [])
+        self.set_values = list(set_values or [])
         if type_ is not None:
             assert type_ is not None
 

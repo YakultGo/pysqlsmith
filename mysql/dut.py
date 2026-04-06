@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 
 import pymysql
 
+from .exceptions import DutBroken, DutFailure, DutSyntax
+
 if TYPE_CHECKING:
     from .main import RunConfig
 
@@ -26,15 +28,18 @@ class DutMySQL:
 
     def _command(self, sql: str):
         # MySQL execution is intentionally stateless per statement: connect, run, commit, close.
-        conn = pymysql.connect(
-            host=self.config.host,
-            port=self.config.port,
-            user=self.config.user,
-            password=self.config.password,
-            database=self.config.dbname,
-            connect_timeout=10,
-            read_timeout=10,
-        )
+        try:
+            conn = pymysql.connect(
+                host=self.config.host,
+                port=self.config.port,
+                user=self.config.user,
+                password=self.config.password,
+                database=self.config.dbname,
+                connect_timeout=10,
+                read_timeout=10,
+            )
+        except Exception as exc:
+            raise DutBroken(str(exc)) from exc
         self.queries += 1
         try:
             with conn.cursor() as cur:
@@ -46,6 +51,9 @@ class DutMySQL:
                 self._err_file.write(sql + "\n")
                 self._err_file.write(str(e) + "\n")
                 self._err_file.flush()
+            if isinstance(e, pymysql.err.ProgrammingError):
+                raise DutSyntax(str(e)) from e
+            raise DutFailure(str(e)) from e
         finally:
             conn.close()
 

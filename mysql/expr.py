@@ -1,20 +1,28 @@
 """MySQL value and boolean expression productions."""
 
 from __future__ import annotations
-from typing import Optional, List, TYPE_CHECKING, Dict
+from typing import Optional, List, TYPE_CHECKING
 
 from .prod import Prod
-from .relmodel import SQLType, PGType, Column
-from .random_utils import d6, d9, d12, d20, d42, d100, random_pick, random_pick_iter
+from .relmodel import SQLType, Column
+from .random_utils import d6, d9, d12, d20, d42, d100, random_pick
 
 if TYPE_CHECKING:
     from .schema_base import Schema
 
 
 def _type_cast_name(type_: SQLType) -> str:
-    if isinstance(type_, PGType):
-        return type_.cast_name
-    return type_.name
+    cast_names = {
+        "INT": "SIGNED",
+        "DECIMAL": "DECIMAL(20,10)",
+        "TEXT": "CHAR",
+        "DATETIME": "DATETIME",
+        "BIT": "UNSIGNED",
+        "BLOB": "BINARY",
+        "ENUM": "CHAR",
+        "SET": "CHAR",
+    }
+    return cast_names.get(type_.name, type_.name)
 
 
 def _nearest_default_policy(p: Optional[Prod]) -> Optional[bool]:
@@ -25,234 +33,124 @@ def _nearest_default_policy(p: Optional[Prod]) -> Optional[bool]:
     return None
 
 
-def _materialize_type(schema: "Schema", type_: SQLType) -> SQLType:
-    # Pseudotypes are placeholders during generation, not renderable SQL types.
-    # Before building an expression we collapse them to one concrete choice.
-    if not isinstance(type_, PGType) or not type_.is_pseudotype:
-        return type_
+def _mutation_target_table(p: Optional[Prod]):
+    from .grammar import ModifyingStmt
 
-    candidates = [
-        t for t in schema.concrete_type.get(type_, [])
-        if isinstance(t, PGType) and not t.is_pseudotype
-    ]
-    if not candidates:
-        raise RuntimeError(f"cannot materialize pseudotype {type_.name}")
-    return random_pick(candidates)
-
-
-def _pg_oid_type(schema: "Schema", oid: int) -> Optional[PGType]:
-    oid_map = getattr(schema, "oid2type", None)
-    if oid_map is None:
-        return None
-    return oid_map.get(int(oid))
-
-
-def _pg_element_type(schema: "Schema", type_: SQLType) -> Optional[PGType]:
-    if not isinstance(type_, PGType) or type_.typelem == PGType.INVALID_OID:
-        return None
-    return _pg_oid_type(schema, type_.typelem)
-
-
-def _pg_array_type(schema: "Schema", type_: SQLType) -> Optional[PGType]:
-    if not isinstance(type_, PGType) or type_.typarray == PGType.INVALID_OID:
-        return None
-    return _pg_oid_type(schema, type_.typarray)
-
-
-def _pg_range_subtype(schema: "Schema", type_: SQLType) -> Optional[PGType]:
-    if not isinstance(type_, PGType) or type_.rngsubtype == PGType.INVALID_OID:
-        return None
-    return _pg_oid_type(schema, type_.rngsubtype)
-
-
-def _pg_multirange_type(schema: "Schema", type_: SQLType) -> Optional[PGType]:
-    if not isinstance(type_, PGType) or type_.rngmultitypid == PGType.INVALID_OID:
-        return None
-    return _pg_oid_type(schema, type_.rngmultitypid)
-
-
-def _pg_range_type(schema: "Schema", type_: SQLType) -> Optional[PGType]:
-    if not isinstance(type_, PGType) or type_.rngrangetype == PGType.INVALID_OID:
-        return None
-    return _pg_oid_type(schema, type_.rngrangetype)
-
-
-def _pseudo_family(type_: SQLType) -> Optional[str]:
-    if not isinstance(type_, PGType) or not type_.is_pseudotype:
-        return None
-
-    name = type_.name
-    if name in ("anyelement", "anynonarray", "anyenum"):
-        return "element"
-    if name == "anyarray":
-        return "array"
-    if name == "anyrange":
-        return "range"
-    if name == "anymultirange":
-        return "multirange"
-    if name in ("anycompatible", "anycompatiblenonarray"):
-        return "compatible_element"
-    if name == "anycompatiblearray":
-        return "compatible_array"
-    if name == "anycompatiblerange":
-        return "compatible_range"
-    if name == "anycompatiblemultirange":
-        return "compatible_multirange"
+    while p is not None:
+        if isinstance(p, ModifyingStmt):
+            return getattr(p, "victim", None)
+        p = p.pprod
     return None
 
 
-def _bind_pseudotype(schema: "Schema", pseudo: SQLType, concrete: SQLType,
-                     bindings: Dict[str, SQLType]) -> None:
-    # One polymorphic decision often implies related family members such as
-    # element/array or range/subtype. Record those relationships once here.
-    family = _pseudo_family(pseudo)
-    if family is None:
-        return
-
-    bindings[family] = concrete
-
-    if family == "array":
-        elem = _pg_element_type(schema, concrete)
-        if elem is not None:
-            bindings.setdefault("element", elem)
-    elif family == "element":
-        arr = _pg_array_type(schema, concrete)
-        if arr is not None:
-            bindings.setdefault("array", arr)
-    elif family == "compatible_array":
-        elem = _pg_element_type(schema, concrete)
-        if elem is not None:
-            bindings.setdefault("compatible_element", elem)
-    elif family == "compatible_element":
-        arr = _pg_array_type(schema, concrete)
-        if arr is not None:
-            bindings.setdefault("compatible_array", arr)
-        for candidate in schema.concrete_type.get(SQLType.get("anycompatiblerange"), []):
-            if isinstance(candidate, PGType) and not candidate.is_pseudotype and candidate.rngsubtype == getattr(concrete, "oid", 0):
-                bindings.setdefault("compatible_range", candidate)
-                mr = _pg_multirange_type(schema, candidate)
-                if mr is not None:
-                    bindings.setdefault("compatible_multirange", mr)
-                break
-    elif family == "range":
-        subtype = _pg_range_subtype(schema, concrete)
-        if subtype is not None:
-            bindings.setdefault("element", subtype)
-        mr = _pg_multirange_type(schema, concrete)
-        if mr is not None:
-            bindings.setdefault("multirange", mr)
-    elif family == "multirange":
-        rng = _pg_range_type(schema, concrete)
-        if rng is not None:
-            bindings.setdefault("range", rng)
-            subtype = _pg_range_subtype(schema, rng)
-            if subtype is not None:
-                bindings.setdefault("element", subtype)
-    elif family == "compatible_range":
-        subtype = _pg_range_subtype(schema, concrete)
-        if subtype is not None:
-            bindings.setdefault("compatible_element", subtype)
-        mr = _pg_multirange_type(schema, concrete)
-        if mr is not None:
-            bindings.setdefault("compatible_multirange", mr)
-    elif family == "compatible_multirange":
-        rng = _pg_range_type(schema, concrete)
-        if rng is not None:
-            bindings.setdefault("compatible_range", rng)
-            subtype = _pg_range_subtype(schema, rng)
-            if subtype is not None:
-                bindings.setdefault("compatible_element", subtype)
+def _quote_sql_string(value: str) -> str:
+    return "'" + value.replace("\\", "\\\\").replace("'", "''") + "'"
 
 
-def _resolve_pseudotype(schema: "Schema", pseudo: SQLType,
-                        bindings: Dict[str, SQLType]) -> SQLType:
-    # Reuse previous bindings whenever possible so a single function call keeps
-    # all polymorphic arguments internally consistent.
-    assert isinstance(pseudo, PGType) and pseudo.is_pseudotype
+def _int_literal() -> str:
+    base = d100() - d100()
+    if d6() == 1:
+        return "0"
+    return str(base)
 
-    family = _pseudo_family(pseudo)
-    if family is not None:
-        bound = bindings.get(family)
-        if bound is not None and pseudo.consistent(bound):
-            return bound
 
-        if family == "array":
-            elem = bindings.get("element")
-            arr = _pg_array_type(schema, elem) if elem is not None else None
-            if arr is not None and pseudo.consistent(arr):
-                bindings[family] = arr
-                return arr
-        elif family == "element":
-            arr = bindings.get("array")
-            elem = _pg_element_type(schema, arr) if arr is not None else None
-            if elem is not None and pseudo.consistent(elem):
-                bindings[family] = elem
-                return elem
-        elif family == "compatible_array":
-            elem = bindings.get("compatible_element")
-            arr = _pg_array_type(schema, elem) if elem is not None else None
-            if arr is not None and pseudo.consistent(arr):
-                bindings[family] = arr
-                return arr
-        elif family == "compatible_element":
-            arr = bindings.get("compatible_array")
-            elem = _pg_element_type(schema, arr) if arr is not None else None
-            if elem is not None and pseudo.consistent(elem):
-                bindings[family] = elem
-                return elem
-            rng = bindings.get("compatible_range")
-            elem = _pg_range_subtype(schema, rng) if rng is not None else None
-            if elem is not None and pseudo.consistent(elem):
-                bindings[family] = elem
-                return elem
-        elif family == "range":
-            elem = bindings.get("element")
-            if elem is not None:
-                candidates = [
-                    t for t in schema.concrete_type.get(pseudo, [])
-                    if isinstance(t, PGType) and not t.is_pseudotype and t.rngsubtype == getattr(elem, "oid", 0)
-                ]
-                if candidates:
-                    concrete = random_pick(candidates)
-                    bindings[family] = concrete
-                    return concrete
-            mr = bindings.get("multirange")
-            rng = _pg_range_type(schema, mr) if mr is not None else None
-            if rng is not None and pseudo.consistent(rng):
-                bindings[family] = rng
-                return rng
-        elif family == "multirange":
-            rng = bindings.get("range")
-            mr = _pg_multirange_type(schema, rng) if rng is not None else None
-            if mr is not None and pseudo.consistent(mr):
-                bindings[family] = mr
-                return mr
-        elif family == "compatible_range":
-            elem = bindings.get("compatible_element")
-            if elem is not None:
-                candidates = [
-                    t for t in schema.concrete_type.get(pseudo, [])
-                    if isinstance(t, PGType) and not t.is_pseudotype and t.rngsubtype == getattr(elem, "oid", 0)
-                ]
-                if candidates:
-                    concrete = random_pick(candidates)
-                    bindings[family] = concrete
-                    return concrete
-            mr = bindings.get("compatible_multirange")
-            rng = _pg_range_type(schema, mr) if mr is not None else None
-            if rng is not None and pseudo.consistent(rng):
-                bindings[family] = rng
-                return rng
-        elif family == "compatible_multirange":
-            rng = bindings.get("compatible_range")
-            mr = _pg_multirange_type(schema, rng) if rng is not None else None
-            if mr is not None and pseudo.consistent(mr):
-                bindings[family] = mr
-                return mr
+def _decimal_literal() -> str:
+    whole = d100()
+    frac = d100() - 1
+    sign = "-" if d12() == 1 else ""
+    return f"{sign}{whole}.{frac:02d}"
 
-    concrete = _materialize_type(schema, pseudo)
-    _bind_pseudotype(schema, pseudo, concrete, bindings)
-    return concrete
+
+def _text_literal() -> str:
+    samples = [
+        "",
+        "a",
+        "test",
+        "hello",
+        "mysql",
+        "sqlsmith",
+        "user_1",
+        "2024-01-01",
+        "alpha beta",
+    ]
+    if d6() == 1:
+        samples.append(f"str_{d100()}")
+    return _quote_sql_string(random_pick(samples))
+
+
+def _datetime_literal() -> str:
+    year = 2020 + (d9() - 1)
+    month = min(d12(), 12)
+    day = min(d20(), 28)
+    hour = d20() % 24
+    minute = d42() % 60
+    second = d42() % 60
+    return _quote_sql_string(
+        f"{year:04d}-{month:02d}-{day:02d} {hour:02d}:{minute:02d}:{second:02d}"
+    )
+
+
+def _blob_literal() -> str:
+    samples = ["00", "01", "7f", "4142", "48656c6c6f", "deadbeef"]
+    return f"x'{random_pick(samples)}'"
+
+
+def _enum_or_set_literal(scope, type_name: str) -> Optional[str]:
+    candidates: list[str] = []
+    attr = "enum_values" if type_name == "ENUM" else "set_values"
+
+    def collect_from_rel(rel) -> None:
+        for col in rel.columns():
+            if col.type is not None and col.type.name == type_name:
+                values = getattr(col, attr, [])
+                if type_name == "SET":
+                    candidates.extend(values)
+                    if len(values) >= 2:
+                        candidates.append(",".join(values[:2]))
+                else:
+                    candidates.extend(values)
+
+    for rel in getattr(scope, "refs", []):
+        collect_from_rel(rel)
+
+    schema = getattr(scope, "schema", None)
+    if schema is not None:
+        for table in getattr(schema, "tables", []):
+            collect_from_rel(table)
+
+    if not candidates:
+        return None
+    return _quote_sql_string(random_pick(candidates))
+
+
+def _preferred_routine_names(type_name: str, agg: bool) -> set[str]:
+    if agg:
+        mapping = {
+            "INT": {"count", "sum", "avg", "max"},
+            "DECIMAL": {"sum", "avg", "max"},
+            "TEXT": {"group_concat"},
+        }
+    else:
+        mapping = {
+            "INT": {"abs", "round", "char_length", "locate", "last_insert_id", "ifnull", "nullif"},
+            "DECIMAL": {"round", "ifnull", "nullif"},
+            "TEXT": {"concat", "replace", "lower", "upper", "trim", "ltrim", "rtrim", "substring", "quote", "hex", "ifnull", "nullif"},
+            "DATETIME": {"current_timestamp", "date", "ifnull", "nullif"},
+        }
+    return mapping.get(type_name, set())
+
+
+def _preferred_return_types(schema: "Schema", scope) -> list[SQLType]:
+    seen: list[SQLType] = []
+    for rel in getattr(scope, "refs", []):
+        for col in rel.columns():
+            if col.type not in seen and col.type in schema.types:
+                seen.append(col.type)
+    for type_name in ("INT", "DECIMAL", "TEXT", "DATETIME"):
+        type_ = SQLType.get(type_name)
+        if type_ not in seen and type_ in schema.types:
+            seen.append(type_)
+    return seen
 
 
 class ValueExpr(Prod):
@@ -294,15 +192,26 @@ class ConstExpr(ValueExpr):
         schema: Schema = self.scope.schema
         self.type = type_constraint if type_constraint else schema.inttype
 
-        if isinstance(self.type, PGType) and self.type.is_pseudotype:
-            self.type = _materialize_type(schema, self.type)
-
-        if self.type is schema.inttype:
-            self.expr = str(d100())
+        if _is_insert_context(parent) and _nearest_default_policy(parent) is not False and d6() > 2:
+            self.expr = "default"
         elif self.type is schema.booltype:
             self.expr = schema.true_literal if d6() > 2 else schema.false_literal
-        elif _is_insert_context(parent) and _nearest_default_policy(parent) is not False and d6() > 2:
-            self.expr = "default"
+        elif self.type is schema.inttype or self.type.name == "INT":
+            self.expr = _int_literal()
+        elif self.type.name == "DECIMAL":
+            self.expr = _decimal_literal()
+        elif self.type.name == "ENUM":
+            self.expr = _enum_or_set_literal(self.scope, "ENUM") or _text_literal()
+        elif self.type.name == "SET":
+            self.expr = _enum_or_set_literal(self.scope, "SET") or _text_literal()
+        elif self.type.name == "TEXT":
+            self.expr = _text_literal()
+        elif self.type.name == "DATETIME":
+            self.expr = _datetime_literal()
+        elif self.type.name == "BIT":
+            self.expr = "1" if d6() > 1 else "0"
+        elif self.type.name == "BLOB":
+            self.expr = _blob_literal()
         else:
             self.expr = f"cast(null as {_type_cast_name(self.type)})"
 
@@ -336,7 +245,6 @@ class FunCall(ValueExpr):
         self.is_aggregate = agg
         self.proc = None
         self.parms: List[ValueExpr] = []
-        self._bindings: Dict[str, SQLType] = {}
         schema: Schema = self.scope.schema
 
         if type_constraint is schema.internaltype:
@@ -349,17 +257,30 @@ class FunCall(ValueExpr):
         else:
             idx = schema.parameterless_routines_returning_type
 
-        # Choose a routine by return type first, then resolve its argument
-        # types so polymorphic signatures remain self-consistent.
         while True:
             if not type_constraint:
-                all_items = []
-                for v in idx.values():
-                    all_items.extend(v)
-                self.proc = random_pick(all_items)
+                preferred_types = _preferred_return_types(schema, self.scope)
+                chosen_type = random_pick(preferred_types) if preferred_types and d6() > 1 else None
+                items = idx.get(chosen_type, []) if chosen_type is not None else []
+                preferred_names = _preferred_routine_names(chosen_type.name, agg) if chosen_type is not None else set()
+                preferred_items = [proc for proc in items if proc.name in preferred_names]
+                if preferred_items and d6() > 1:
+                    self.proc = random_pick(preferred_items)
+                elif items:
+                    self.proc = random_pick(items)
+                else:
+                    all_items = []
+                    for v in idx.values():
+                        all_items.extend(v)
+                    self.proc = random_pick(all_items)
             else:
                 items = idx.get(type_constraint, [])
-                self.proc = random_pick(items)
+                preferred_names = _preferred_routine_names(type_constraint.name, agg)
+                preferred_items = [proc for proc in items if proc.name in preferred_names]
+                if preferred_items and d6() > 1:
+                    self.proc = random_pick(preferred_items)
+                else:
+                    self.proc = random_pick(items)
                 if self.proc and not type_constraint.consistent(self.proc.restype):
                     self.retry()
                     continue
@@ -368,40 +289,14 @@ class FunCall(ValueExpr):
                 self.retry()
                 continue
 
-            resolved_argtypes: List[SQLType] = []
-            self._bindings = {}
+            resolved_argtypes = list(self.proc.argtypes)
+            self.type = type_constraint if type_constraint else self.proc.restype
 
-            try:
-                if type_constraint:
-                    self.type = _materialize_type(schema, type_constraint)
-                    if isinstance(self.proc.restype, PGType) and self.proc.restype.is_pseudotype:
-                        _bind_pseudotype(schema, self.proc.restype, self.type, self._bindings)
-                elif isinstance(self.proc.restype, PGType) and self.proc.restype.is_pseudotype:
-                    self.type = None
-                else:
-                    self.type = self.proc.restype
-
-                for at in self.proc.argtypes:
-                    if at is schema.internaltype:
-                        raise RuntimeError("internal arg type")
-                    if isinstance(at, PGType) and at.is_pseudotype:
-                        resolved = _resolve_pseudotype(schema, at, self._bindings)
-                    else:
-                        resolved = at
-                    if resolved is schema.internaltype:
-                        raise RuntimeError("internal resolved type")
-                    resolved_argtypes.append(resolved)
-
-                if self.type is None:
-                    if isinstance(self.proc.restype, PGType) and self.proc.restype.is_pseudotype:
-                        self.type = _resolve_pseudotype(schema, self.proc.restype, self._bindings)
-                    else:
-                        self.type = self.proc.restype
-            except RuntimeError:
+            if self.type is schema.internaltype:
                 self.retry()
                 continue
 
-            if self.type is schema.internaltype:
+            if any(argtype is schema.internaltype for argtype in resolved_argtypes):
                 self.retry()
                 continue
 
@@ -434,6 +329,7 @@ class AtomicSubselect(ValueExpr):
         self.offset = d100() if d6() == 3 else d6()
         self.match()
         schema: Schema = self.scope.schema
+        mutation_target = _mutation_target_table(parent)
 
         self.agg = None
         # Scalar subqueries are a useful fallback when the current scope lacks
@@ -450,7 +346,10 @@ class AtomicSubselect(ValueExpr):
                 type_constraint = self.agg.argtypes[0]
 
         if type_constraint:
-            items = schema.tables_with_columns_of_type.get(type_constraint, [])
+            items = [
+                t for t in schema.tables_with_columns_of_type.get(type_constraint, [])
+                if t is not mutation_target
+            ]
             self.tab = random_pick(items)
             self.col = None
             for cand in self.tab.columns():
@@ -459,7 +358,8 @@ class AtomicSubselect(ValueExpr):
                     break
             assert self.col is not None
         else:
-            self.tab = random_pick(schema.tables)
+            items = [t for t in schema.tables if t is not mutation_target]
+            self.tab = random_pick(items)
             self.col = random_pick(self.tab.columns())
 
         self.type = self.agg.restype if self.agg else self.col.type
@@ -675,6 +575,8 @@ class WindowFunction(ValueExpr):
         super().__init__(parent)
         self.match()
         self.aggregate = FunCall(self, type_constraint, agg=True)
+        if self.aggregate.proc.name == "group_concat":
+            self.fail("group_concat is not usable as a window function on this MySQL")
         self.type = self.aggregate.type
         self.partition_by: List[ColumnReference] = [ColumnReference(self)]
         while d6() > 2:
